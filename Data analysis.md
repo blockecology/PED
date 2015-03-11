@@ -1,5 +1,11 @@
-# Data Analysis for Block and Meave (201X, Plant Eco & Div)
-Sebastian Block  
+---
+title: "Data Analysis for Block and Meave (201X, Plant Eco & Div)"
+author: Sebastian Block
+output:
+  html_document:
+    keep_md: true
+    theme: flatly
+---
 
 This report shows the data analysis done for the paper Block and Meave (201X), published in the journal Plant Ecology & Diversity.  
 The analysis was reproduced for the last time on March 9th, 2015. I used R version 3.1.2 (2014-10-31) -- "Pumpkin Helmet" and worked in a platform x86_64-apple-darwin13.4.0 (64-bit).
@@ -334,7 +340,7 @@ text(unit.sc[c(1,2,4,5),], unit.names[c(1,2,4,5)], cex=0.7, font=2, pos=4)
 text(unit.sc[c(3,6),], unit.names[c(3,6)], cex=0.7, font=2, pos=3)
 ```
 
-![](Data_analysis_files/figure-html/unnamed-chunk-7-1.png) 
+![plot of chunk unnamed-chunk-7](figure/unnamed-chunk-7-1.png) 
 
 ### Composition data
 
@@ -568,7 +574,7 @@ text(spunit.sc[c(2,3,4,6),], unit.names[c(2,3,4,6)], cex=0.7, font=2, pos=2)
 text(spunit.sc[c(1,5),], unit.names[c(1,5)], cex=0.7, font=2, pos=3)
 ```
 
-![](Data_analysis_files/figure-html/unnamed-chunk-10-1.png) 
+![plot of chunk unnamed-chunk-10](figure/unnamed-chunk-10-1.png) 
 
 ### Plot for the paper
 
@@ -629,4 +635,4 @@ text(spunit.sc[c(2,3,4,6),], unit.names[c(2,3,4,6)], cex=0.7, font=2, pos=2)
 text(spunit.sc[c(1,5),], unit.names[c(1,5)], cex=0.7, font=2, pos=3)
 ```
 
-![](Data_analysis_files/figure-html/unnamed-chunk-11-1.png) 
+![plot of chunk unnamed-chunk-11](figure/unnamed-chunk-11-1.png) 
