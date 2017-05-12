@@ -10,6 +10,51 @@ output:
 This report shows the data analysis presented in the paper Block and Meave (2017), published in the journal Plant Ecology & Diversity.  
 The analysis was reproduced for the last time on May 12th, 2017. I used R version 3.3.0 (2016-05-03) -- "Supposedly Educational" and worked in a platform x86_64-apple-darwin13.4.0 (64-bit).
 
+## Community composition and geomorphological units
+
+We used Non-Metric Multidimensional Scaling to explore the floristic similiarity among our plots and to assess if plots in the same geomorphological unit are more similar than what it would be expected based on the geographic distance between them. 
+
+```{r}
+### Load required packages
+library(ade4)
+library(vegan)
+library(MASS)
+library(ellipse)
+library(FactoMineR)
+
+# Load vector containing geomorphological unit of each plot
+env <- read.csv("env.csv")
+unit <- as.character(env[,5])
+
+### Read composition data and run NMDS for Jaccard and Chao indexes
+x <- read.csv("PA_total.csv", sep=",", header=T, row.names=1)
+
+jaccard_dist <- vegdist(x, method = "jaccard")
+chao_dist <- vegdist(x, method = "chao")
+mds.chao <- metaMDS(x, distance="chao", binary=T ) # Calculate Chao-Jaccard distances
+
+## Calculate spatial distances
+Location <- read.csv("Location.csv") # Read plot location data
+DistMat <- dist(Location[,4:5])
+geog_dist <- as.numeric(DistMat)
+
+# Plots
+par(mfrow = c(1,2), mar = c(2.5,2.5,1.2,0.5), cex.axis = 0.6, cex.lab = 0.8, mgp = c(1.5, 0.5, 0))
+
+# NMDS
+plot(-1.6:2, -1.6:1.5, xlim = c(-1.5, 1.5), ylim = c(-1.5, 1.5),
+     type = "n", xlab = "NMDS1", ylab = "NMDS2")
+text(mds.chao$points, unit, cex = 0.4, col = "gray20")
+mtext("(a)", side = 3, adj = 0, line = 0.2, outer = F)
+
+# Distance vs Chao
+plot(geog_dist/1000, chao_dist, ylab = "Chao-Jaccard Dissimilarity Index", 
+     xlab = "Distance (km)", cex = 0.4, pch = 19, col = "darkgray")
+points(geog_dist/1000, chao_dist, cex = 0.4, col = "gray50")
+mtext("(b)", side = 3, adj = 0, line = 0.2, outer = F)
+```
+
+
 ## Redundancy analysis
 
 First, load the packages required for the analysis.
