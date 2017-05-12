@@ -24,6 +24,8 @@ plot belongs (CH = Chichinautzin; OC = Oclayuca; SU = Suchiooc; LO = Lower Otate
 
 * `aspect.csv` is a vector containing values of the aspect (in degrees) of each plot. Plots are in the same order as in `env.csv`.
 
+* `Location.csv` contains data on the geographical location of the plots. **Plot**: a unique ID for each plot (DeRe = Chichinautzin plots, DeSu = Suchiooc, PreSuA = Upper Otates, PreSuB = Lower Otates, SinDe = Oclayuca, Tepoz = Tepozteco). **Lat** and **Lon** are the latitude and longitude of the plot, **UTM E** and **UTM N** are the Universal Transverse Mercator coordinates of the plots (east and north, respectively). **Elev** is the plot elevation above sea level (in meters). 
+
 * `str.csv` contains vegetation structure variables measured in each plot (each row corresponds to one plot). **ba**: basal area (squared centimeters).
 **cov**: Crown cover (squared meters). **den**: Stem density. **hei**: Mean height of the three tallest trees in the plot (meters).
 
