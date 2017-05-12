@@ -1,5 +1,5 @@
 ---
-title: "Data Analysis in Block and Meave (2017, Plant Eco & Div)"
+title: "Data analysis excluding Chichinautzin gemorphological unit"
 author: Sebastian Block
 output:
   html_document:
@@ -7,7 +7,7 @@ output:
     theme: flatly
 ---
 
-This report shows the data analysis presented in the paper Block and Meave (2017), published in the journal Plant Ecology & Diversity.  
+This report shows an additional analysis presented in the paper Block and Meave (2017), published in the journal Plant Ecology & Diversity.  
 The analysis was reproduced for the last time on May 12th, 2017. I used R version 3.3.0 (2016-05-03) -- "Supposedly Educational" and worked in a platform x86_64-apple-darwin13.4.0 (64-bit).
 
 ## Redundancy analysis
@@ -22,21 +22,31 @@ library(ellipse)
 library(FactoMineR)
 ```
 
-To load the data, all files must be in the working directory. 
+To load the data, all files must be in the working directory. Since the Chichinautzin geomorphological unit has extreme values of exposed rock compared to all other units, it is possible that this unit alone is driving the effects of rock exposure. Hence, I also did the analysis excluding data from this unit.
 
 
 ```{r}
-structure <- read.csv("str.csv") # Vegetation structure data
-env <- read.csv("env.csv") # Environmental variables data
-asp <- read.csv("aspect.csv") # Aspect data
+structure <- read.csv("str.csv")
+env <- read.csv("env.csv")
+asp <- read.csv("aspect.csv")
+
+# Remove Chichinautzin unit
+ch.index <- env$unit != 'CH'
+structure <- structure[ch.index,]
+asp <- asp[ch.index,]
+env <- env[ch.index,]
+
+env$unit <- factor(env$unit)
+par(mar = c(4.8, 4.8, 1, 1))
+boxplot(rock~ unit, data = env, xlab = "Geomorphological unit", ylab = "% of exposed rock", cex.lab = 1.3)
 ```
 
-I did some modifications to the data. First, I combined all the quantitative variables of the `env` data (i.e., all variables except the geomorphological unit) with the `asp` data into a single object called `env.quant`. Then, I normalized the data in `env.quant` to allow comparison between variables with very different units. Finally, I added the geomorphological unit column to the normalized quantitative environmental variables to create the data frame `env.ra`, which was used for the redundancy analysis. 
+I did some modifications to the data. First, I combined all the quantitative variables of the `env` data (i.e., all except the geomorphological unit) with the `asp` data into a single object called `env.quant`. Then, I normalized the data in `env.quant` to allow comparison between variables with very different units. Finally, I added the geomorphological unit column to the normalized quantitative environmental variables to create the data frame `env.ra`, which was used for the redundancy analysis. 
 
 ```{r}
 env.quant <- cbind(env[,-5],asp)
 env.z <- scale(env.quant)
-unit <- env[,5]
+unit <- factor(env[,5])
 env.ra <- data.frame(env.z,unit)
 ```
 
@@ -59,15 +69,15 @@ I then got the R squared and the adjusted R squared for this analysis.
 To test the null hypothesis that no linear relationship exists between the response data and the explanatory variables, I did a permutation analysis with 1000 permutations. 
 
 ```{r}
-anova.cca(str.rda, step = 1000)
+anova.cca(str.rda, step=1000)
 ```
 
 To make a triplot with scaling 2. 
 
 ```{r}
 par(mar=c(4,4,2,2))
-plot(str.rda, xlab="RDA1 (19.92 %)", ylab="RDA2 (3.51 %)", 
-     display=c("cn", "lc", "sp"), type="n", xlim=c(-1.3,1.3))
+plot(str.rda, xlab="RDA1 (11.6 %)", ylab="RDA2 (3.9 %)", 
+     display=c("cn", "lc", "sp"), type="n", xlim=c(-1.3, 1.3))
 sites.sc <- scores(str.rda, choices=1:2, scaling=2, display="lc")
 points(sites.sc, pch=1, cex=0.5)
 va.sc <- scores(str.rda, choices=1:2, scaling=2, display="sp")
@@ -77,11 +87,11 @@ arrows(0,0, env.sc[1:5,1], env.sc[1:5,2], lty=1, lwd=2.5, length=0.1)
 env.names <- c("Elevation", "Slope", "Rock", "CDI", "Aspect")
 text(env.sc[c(1,3,4),], env.names[c(1,3,4)], cex=0.9, font=2, pos=4)
 text(env.sc[c(2,5),], env.names[c(2,5)], cex=0.9, font=2, pos=2)
-unit.names <- c("CH", "LO", "OC", "SU", "TE", "UO")
+unit.names <- c("LO", "OC", "SU", "TE", "UO")
 unit.sc <- scores(str.rda, choices=1:2, scaling=2, display="cn")
 points(unit.sc, pch=23)
-text(unit.sc[c(1,2,4,5),], unit.names[c(1,2,4,5)], cex=0.7, font=2, pos=4)
-text(unit.sc[c(3,6),], unit.names[c(3,6)], cex=0.7, font=2, pos=3)
+text(unit.sc, unit.names, cex=0.7, font=2, pos=4)
+#text(unit.sc[c(3),], unit.names[c(3)], cex=0.7, font=2, pos=3)
 ```
 
 ### Composition data
@@ -91,14 +101,15 @@ text(unit.sc[c(3,6),], unit.names[c(3,6)], cex=0.7, font=2, pos=3)
 First I loaded the species data. Again, the file `can.csv` must be in the working directory. To reduce the importance of large abundances, I applied the Hellinger transformation to the species data, as recommended by Borcard et al. (2011, Numerical Ecology in R)
 . 
 ```{r}
-can <- read.csv("can.csv", sep = ",", header = T, row.names = 1)
-can.he <- decostand(can, "hellinger")
+can <- read.csv("can.csv", sep=",", header=T, row.names=1)
+can <- can[ch.index,]
+can.he <- decostand(can,"hellinger")
 ```
 
 Then I did a redundancy analysis using all the environmental variables as explanatory variables. I tested the null hypothesis with a permutation analysis.
 
 ```{r}
-can.rda <- rda(can.he ~ ., env.ra)
+can.rda <- rda(can.he~., env.ra)
 summary.canrda <- summary(can.rda)
 head(summary.canrda)
 
@@ -107,7 +118,7 @@ head(summary.canrda)
 (spR2adj <- RsquareAdj(can.rda)$adj.r.squared)
 
 # Permutation analysis
-anova.cca(can.rda, step = 1000) 
+anova.cca(can.rda, step=1000) 
 ```
 
 To make a triplot of the RDA on canopy species data with scaling 2.
@@ -116,7 +127,7 @@ To make a triplot of the RDA on canopy species data with scaling 2.
 # Make plotting space
 par(mar=c(4,4,2,2))
 plot(can.rda, scaling=2, display=c("cn", "lc", "sp"), type="n", 
-     xlab="RDA1 (19.61 %)", ylab="RDA2 (6.77 %)", main = "Canopy")
+     xlab="RDA1 (16.68 %)", ylab="RDA2 (7.96 %)", main = "Canopy")
 
 # Plot points for sites
 spsites.sc <- scores(can.rda, choices=1:2, scaling=2, display="lc")
@@ -127,29 +138,32 @@ sp.sc <- scores(can.rda, choices=1:2, scaling=2, display="sp")
 points(sp.sc, pch=4, cex=0.5, col="gray50")
 
 # Plot point for geomorphological unit centroids and their labels
-unit.names <- c("CH", "LO", "OC", "SU", "TE", "UO")
+unit.names <- c("LO", "OC", "SU", "TE", "UO")
 canunit.sc <- scores(can.rda, choices=1:2, scaling=2, display="cn")
 points(canunit.sc, pch=23, bg = "darkgray")
-text(canunit.sc[c(2,4,5),], unit.names[c(2,4,5)], cex=0.7, font=2, pos=2, col = "darkgray")
-text(canunit.sc[c(3,6),], unit.names[c(3,6)], cex=0.7, font=2, pos=3, col = "darkgray")
-text(matrix(canunit.sc[1,], nrow=1, ncol=2), unit.names[c(1)], cex=0.7, font=2, pos=1, col = "darkgray")
+text(canunit.sc, unit.names, cex=0.7, font=2, pos=2, col = "darkgray")
+#text(canunit.sc[c(3,6),], unit.names[c(3,6)], cex=0.7, font=2, pos=3, col = "darkgray")
+#text(matrix(canunit.sc[1,], nrow=1, ncol=2), unit.names[c(1)], cex=0.7, font=2, pos=1, col = "darkgray")
 
 # Plot arrows of quantitative explanatory variables and their labels
 canenv.sc <- scores(can.rda, choices=1:2, scaling=2, display="bp")
 arrows(0,0, canenv.sc[1:5,1], canenv.sc[1:5,2], lty=1, lwd=2.5, length=0.1, col="black")
 env.names <- c("Elevation", "Slope", "Rock", "CDI", "Aspect")
-text(canenv.sc[c(1,3),], env.names[c(1,3)], cex=0.9, font=2, pos=2)
-text(canenv.sc[c(2,4),], env.names[c(2,4)], cex=0.9, font=2, pos=1)
+text(matrix(canenv.sc[1,], nrow = 1, ncol = 2), env.names[1], cex=0.9, font=2, pos=2)
+text(matrix(canenv.sc[3,], nrow = 1, ncol = 2), env.names[3], cex=0.9, font=2, pos=1)
+text(canenv.sc[c(2,4),], env.names[c(2,4)], cex=0.9, font=2, pos=3)
+text(canenv.sc[5,], env.names[5], cex=0.9, font=2, pos=4)
 text(matrix(canenv.sc[5,], nrow = 1, ncol = 2), env.names[5], cex=0.9, font=2, pos=4)
 ```
 
 
-#### Understorey
+#### Understory
 
 First I loaded the species data. Again, the file `und.csv` must be in the working directory. To reduce the importance of large abundances, I applied the Hellinger transformation to the species data, as recommended by Borcard et al. (2011, Numerical Ecology in R)
 . 
 ```{r}
 und <- read.csv("und.csv", sep=",", header=T)
+und <- und[ch.index,]
 und.he <- decostand(und, "hellinger")
 ```
 
@@ -174,7 +188,7 @@ To make a triplot of the RDA on species data with scaling 2.
 # Make plotting space
 par(mar=c(4,4,2,2))
 plot(und.rda, scaling=2, display=c("cn", "lc", "sp"), type="n", 
-     xlab="RDA1 (9.76 %)", ylab="RDA2 (6.67 %)", main = "Understorey")
+     xlab="RDA1 (8.22 %)", ylab="RDA2 (7.17 %)", main = "Understory")
 
 # Plot points for sites
 spsites.sc <- scores(und.rda, choices=1:2, scaling=2, display="lc")
@@ -185,18 +199,19 @@ sp.sc <- scores(und.rda, choices=1:2, scaling=2, display="sp")
 points(sp.sc, pch=4, cex=0.5, col="gray50")
 
 # Plot point for geomorphological unit centroids and their labels
-unit.names <- c("CH", "LO", "OC", "SU", "TE", "UO")
+unit.names <- c("LO", "OC", "SU", "TE", "UO")
 spunit.sc <- scores(und.rda, choices=1:2, scaling=2, display="cn")
 points(spunit.sc, pch=23, bg = "darkgray")
-text(spunit.sc[c(2,3),], unit.names[c(2,3)], cex=0.7, font=2, pos=2)
-text(spunit.sc[c(1,4,5,6),], unit.names[c(1,4,5,6)], cex=0.7, font=2, pos=4)
+text(spunit.sc, unit.names, cex=0.7, font=2, pos=2)
+#text(spunit.sc[c(1,4,5,6),], unit.names[c(1,4,5,6)], cex=0.7, font=2, pos=4)
 
 # Plot arrows of quantitative explanatory variables and their labels
 spenv.sc <- scores(und.rda, choices=1:2, scaling=2, display="bp")
 arrows(0,0, spenv.sc[1:5,1], spenv.sc[1:5,2], lty=1, lwd=2.5, length=0.1, col="black")
 env.names <- c("Elevation", "Slope", "Rock", "CDI", "Aspect")
-text(spenv.sc[1:3,], env.names[1:3], cex=0.9, font=2, pos=4)
-text(spenv.sc[4:5,], env.names[4:5], cex=0.9, font=2, pos=2)
+text(spenv.sc[c(1,3,4),], env.names[c(1,3,4)], cex=0.9, font=2, pos=1)
+text(matrix(spenv.sc[2,], nrow = 1, ncol = 2), env.names[2], cex=0.9, font=2, pos=4)
+text(matrix(spenv.sc[5,], nrow = 1, ncol = 2), env.names[5], cex=0.9, font=2, pos=2)
 ```
 
 
@@ -211,7 +226,7 @@ par(mfrow=c(2,1))
 # Make plotting space
 par(mar=c(4,4,2,2))
 plot(can.rda, scaling=2, display=c("cn", "lc", "sp"), type="n", 
-     xlab="RDA1 (19.61 %)", ylab="RDA2 (6.77 %)", main = "Canopy")
+     xlab="RDA1 (16.68 %)", ylab="RDA2 (7.96 %)", main = "Canopy")
 
 # Plot points for sites
 spsites.sc <- scores(can.rda, choices=1:2, scaling=2, display="lc")
@@ -242,7 +257,7 @@ text(matrix(canenv.sc[5,], nrow = 1, ncol = 2), env.names[5], cex=0.9, font=2, p
 # Make plotting space
 par(mar=c(4,4,2,2))
 plot(und.rda, scaling=2, display=c("cn", "lc", "sp"), type="n", 
-     xlab="RDA1 (9.76 %)", ylab="RDA2 (6.67 %)", main = "Understorey")
+     xlab="RDA1 (8.22 %)", ylab="RDA2 (7.17 %)", main = "Understory")
 
 # Plot points for sites
 spsites.sc <- scores(und.rda, choices=1:2, scaling=2, display="lc")
